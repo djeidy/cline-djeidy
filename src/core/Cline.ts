@@ -108,7 +108,7 @@ export class Cline {
 		this.terminalManager = new TerminalManager()
 		this.urlContentFetcher = new UrlContentFetcher(provider.context)
 		this.browserSession = new BrowserSession(provider.context)
-		this.noteService = new NoteService(provider.context.globalStorageUri.fsPath)
+		this.noteService = new NoteService()
 		this.diffViewProvider = new DiffViewProvider(cwd)
 		this.customInstructions = customInstructions
 		this.alwaysAllowReadOnly = alwaysAllowReadOnly ?? false
@@ -2193,17 +2193,16 @@ export class Cline {
         return `<environment_details>\n${details.trim()}\n</environment_details>`
     }
 
-    async createNote(title: string, content: string[]): Promise<Note> {
-        const note = await this.noteService.saveNote({
+    async createNote(note: Note): Promise<Note> {
+        return await this.noteService.saveNote({
             id: crypto.randomUUID(),
-            title,
-            content,
-            tags: [],
+            title: note.title,
+            content: note.content,
+            tags: note.tags,
             taskIds: [this.taskId],
             timestamp: Date.now(),
             lastAccessed: Date.now()
         });
-        return note;
     }
 
     async findRelevantNotes(context: string): Promise<Note[]> {
