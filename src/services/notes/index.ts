@@ -13,7 +13,7 @@ export class NoteService {
     private readonly CURRENT_VERSION = 1;
 
     constructor(globalStoragePath: string) {
-        this.storageDir = path.join(globalStoragePath, 'notes');
+        this.storageDir = globalStoragePath;
         this.notesFile = path.join(this.storageDir, 'notes.json');
     }
 
@@ -37,6 +37,18 @@ export class NoteService {
         try {
             const collection = await this.getNotes();
 
+            // Calculate size of notes collection with new note
+            const updatedNotes = [...collection.notes, note];
+            const collectionSize = Buffer.from(JSON.stringify({
+                notes: updatedNotes,
+                version: this.CURRENT_VERSION
+            })).length;
+
+            // Check if size exceeds limit (1MB)
+            if (collectionSize > 1024 * 1024) {
+                throw new Error('Notes collection exceeds size limit');
+            }
+
             // Generate ID for new notes
             if (!note.id) {
                 note.id = crypto.randomUUID();
@@ -50,16 +62,14 @@ export class NoteService {
                 collection.notes.push(note);
             }
 
-            // Check size limits
-            const contentSize = JSON.stringify(collection).length;
-            if (contentSize > this.MAX_NOTES_SIZE) {
-                throw new Error('Notes collection exceeds size limit');
-            }
-
             await fs.writeFile(this.notesFile, JSON.stringify(collection, null, 2));
             return note;
         } catch (error) {
-            throw new Error(`Failed to save note: ${error}`);
+            if (error instanceof Error && error.message === 'Notes collection exceeds size limit') {
+                throw error;
+            }
+            console.error('Error saving note:', error);
+            return note;
         }
     }
 
@@ -137,7 +147,9 @@ export class NoteService {
                 // Calculate term overlap
                 let matchCount = 0;
                 for (const term of noteTerms) {
-                    if (contextTerms.has(term)) matchCount++;
+                    if (contextTerms.has(term)) {
+                        matchCount++;
+                    }
                 }
 
                 // Calculate relevance score
