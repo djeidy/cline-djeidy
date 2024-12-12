@@ -2194,7 +2194,7 @@ export class Cline {
     }
 
     async createNote(title: string, content: string[]): Promise<Note> {
-        return await this.noteService.saveNote({
+        const note = await this.noteService.saveNote({
             id: crypto.randomUUID(),
             title,
             content,
@@ -2203,6 +2203,7 @@ export class Cline {
             timestamp: Date.now(),
             lastAccessed: Date.now()
         });
+        return note;
     }
 
     async findRelevantNotes(context: string): Promise<Note[]> {

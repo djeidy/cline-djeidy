@@ -31,7 +31,7 @@ export class NoteService {
     /**
      * Saves a note to storage
      */
-    async saveNote(note: Note): Promise<void> {
+    async saveNote(note: Note): Promise<Note> {
         await this.ensureStorageExists();
 
         try {
@@ -57,6 +57,7 @@ export class NoteService {
             }
 
             await fs.writeFile(this.notesFile, JSON.stringify(collection, null, 2));
+            return note;
         } catch (error) {
             throw new Error(`Failed to save note: ${error}`);
         }
