@@ -97,6 +97,23 @@ Try asking Cline to "test the app", and watch as he runs a command like `npm run
 -   **`@file`:** Adds a file's contents so you don't have to waste API requests approving read file (+ type to search files)
 -   **`@folder`:** Adds folder's files all at once to speed up your workflow even more
 
+### Note Taking
+
+Cline can now take and manage notes during tasks, providing persistent context across sessions:
+
+-   **Create Notes:** Cline can create notes about important discoveries, patterns, or decisions made during tasks
+-   **Search & Retrieve:** Notes can be searched by content and tags
+-   **Context-Aware:** Relevant notes are automatically surfaced based on the current task context
+-   **Persistent:** Notes are preserved between sessions while respecting token limits
+-   **Smart Relevance:** Uses AI-powered relevance scoring to find the most pertinent notes
+
+Example commands:
+```
+<create_note title="API Authentication">Found that the API requires OAuth2 token in Authorization header</create_note>
+<find_notes query="authentication oauth"/>
+<get_relevant_notes context="current task context"/>
+```
+
 ## Contributing
 
 To contribute to the project, start by exploring [open issues](https://github.com/cline/cline/issues) or checking our [feature request board](https://github.com/cline/cline/discussions/categories/feature-requests?discussions_q=is%3Aopen+category%3A%22Feature+Requests%22+sort%3Atop). We'd also love to have you join our [Discord](https://discord.gg/cline) to share ideas and connect with other contributors. If you're interested in joining the team, check out our [careers page](https://cline.bot/join-us)!
