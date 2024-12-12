@@ -96,6 +96,7 @@ export async function preserveContext(messages: MessageParam[], api: ApiHandler)
         const important_files: string[] = [];
         const critical_decisions: string[] = [];
         const relevant_notes: string[] = [];
+        const notes_to_create: ContextSummary['notes_to_create'] = [];
 
         // Process messages in reverse order (most recent first)
         for (const message of messages.reverse()) {
@@ -137,6 +138,29 @@ export async function preserveContext(messages: MessageParam[], api: ApiHandler)
                 }
             }
 
+            // Extract note references and suggestions
+            if (content.toLowerCase().includes('note:') ||
+                content.toLowerCase().includes('create note') ||
+                content.toLowerCase().includes('take note')) {
+                const lines = content.split('\n');
+                for (const line of lines) {
+                    if (line.toLowerCase().includes('note:')) {
+                        relevant_notes.push(line.trim());
+                    }
+                    // Look for note creation suggestions
+                    if (line.toLowerCase().includes('create note') ||
+                        line.toLowerCase().includes('take note')) {
+                        const title = line.replace(/^.*?(create note|take note):?\s*/i, '').trim();
+                        if (title) {
+                            notes_to_create.push({
+                                title,
+                                content: [line]
+                            });
+                        }
+                    }
+                }
+            }
+
             // Limit the size of arrays to prevent excessive token usage
             if (key_points.length > 10) {
                 break;
@@ -148,6 +172,7 @@ export async function preserveContext(messages: MessageParam[], api: ApiHandler)
             important_files: important_files.slice(0, 10),
             critical_decisions: critical_decisions.slice(0, 5),
             relevant_notes: relevant_notes.slice(0, 5),
+            notes_to_create: notes_to_create.slice(0, 3),
             timestamp: Date.now()
         };
     }
