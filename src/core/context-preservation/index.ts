@@ -11,6 +11,11 @@ export interface ContextSummary {
     important_files: string[];
     critical_decisions: string[];
     timestamp: number;
+    relevant_notes?: string[];
+    notes_to_create?: Array<{
+        title: string;
+        content: string[];
+    }>;
 }
 
 /**
@@ -42,12 +47,15 @@ Focus on:
 1. Key points and insights
 2. Important file references
 3. Critical decisions made
+4. Relevant notes to create or reference
 Keep each category limited to essential information.
 Format the output as JSON matching the following interface:
 {
     "key_points": string[],
     "important_files": string[],
-    "critical_decisions": string[]
+    "critical_decisions": string[],
+    "relevant_notes": string[],
+    "notes_to_create": { title: string, content: string[] }[]
 }`;
 
     try {
@@ -59,6 +67,8 @@ Format the output as JSON matching the following interface:
             key_points: summary.key_points?.slice(0, 10) ?? [],
             important_files: summary.important_files?.slice(0, 10) ?? [],
             critical_decisions: summary.critical_decisions?.slice(0, 5) ?? [],
+            relevant_notes: summary.relevant_notes?.slice(0, 5) ?? [],
+            notes_to_create: summary.notes_to_create?.slice(0, 3) ?? [],
             timestamp: Date.now()
         };
     } catch (error) {
@@ -85,6 +95,8 @@ export async function preserveContext(messages: MessageParam[], api: ApiHandler)
         const key_points: string[] = [];
         const important_files: string[] = [];
         const critical_decisions: string[] = [];
+        const relevant_notes: string[] = [];
+        const notes_to_create: ContextSummary['notes_to_create'] = [];
 
         // Process messages in reverse order (most recent first)
         for (const message of messages.reverse()) {
@@ -126,6 +138,29 @@ export async function preserveContext(messages: MessageParam[], api: ApiHandler)
                 }
             }
 
+            // Extract note references and suggestions
+            if (content.toLowerCase().includes('note:') ||
+                content.toLowerCase().includes('create note') ||
+                content.toLowerCase().includes('take note')) {
+                const lines = content.split('\n');
+                for (const line of lines) {
+                    if (line.toLowerCase().includes('note:')) {
+                        relevant_notes.push(line.trim());
+                    }
+                    // Look for note creation suggestions
+                    if (line.toLowerCase().includes('create note') ||
+                        line.toLowerCase().includes('take note')) {
+                        const title = line.replace(/^.*?(create note|take note):?\s*/i, '').trim();
+                        if (title) {
+                            notes_to_create.push({
+                                title,
+                                content: [line]
+                            });
+                        }
+                    }
+                }
+            }
+
             // Limit the size of arrays to prevent excessive token usage
             if (key_points.length > 10) {
                 break;
@@ -136,6 +171,8 @@ export async function preserveContext(messages: MessageParam[], api: ApiHandler)
             key_points: key_points.slice(0, 10),
             important_files: important_files.slice(0, 10),
             critical_decisions: critical_decisions.slice(0, 5),
+            relevant_notes: relevant_notes.slice(0, 5),
+            notes_to_create: notes_to_create.slice(0, 3),
             timestamp: Date.now()
         };
     }
@@ -156,7 +193,13 @@ export function injectPreservedContext(systemPrompt: string, summary: ContextSum
         (summary.important_files.length > 0 ?
             `Important Files:\n${summary.important_files.map(f => `- ${f}`).join('\n')}\n\n` : '') +
         (summary.critical_decisions.length > 0 ?
-            `Critical Decisions:\n${summary.critical_decisions.map(d => `- ${d}`).join('\n')}` : '');
+            `Critical Decisions:\n${summary.critical_decisions.map(d => `- ${d}`).join('\n')}\n\n` : '') +
+        ((summary.relevant_notes && summary.relevant_notes.length > 0) ?
+            `Relevant Notes:\n${summary.relevant_notes.map(n => `- ${n}`).join('\n')}\n\n` : '') +
+        ((summary.notes_to_create && summary.notes_to_create.length > 0) ?
+            `Notes To Create:\n${summary.notes_to_create.map(n =>
+                `- ${n.title}\n  Content:\n${n.content.map(c => `    - ${c}`).join('\n')}`
+            ).join('\n\n')}\n\n` : '');
 
     // Inject the context summary after the first paragraph of the system prompt
     const firstParaEnd = systemPrompt.indexOf('\n\n');
