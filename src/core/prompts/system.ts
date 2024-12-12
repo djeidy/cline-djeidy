@@ -158,6 +158,35 @@ Your final result description here
 <command>Command to demonstrate result (optional)</command>
 </attempt_completion>
 
+## create_note
+Description: Create a new note with a title and content. Notes are persisted between sessions and can be referenced later for context. Notes are automatically associated with the current task and can be retrieved based on relevance to future contexts.
+Parameters:
+- title: (required) The title of the note, which should be descriptive and help identify the note's purpose
+- content: (required) The content of the note, which can be multiple lines of text
+Usage:
+<create_note>
+<title>Your note title here</title>
+<content>Your note content here, which can span multiple lines</content>
+</create_note>
+
+## find_notes
+Description: Search through existing notes using a query string. This tool helps find previously created notes that match specific search criteria.
+Parameters:
+- query: (required) The search query to use when looking for notes
+Usage:
+<find_notes>
+<query>Your search query here</query>
+</find_notes>
+
+## get_relevant_notes
+Description: Retrieve notes that are relevant to the current context. This tool uses semantic similarity to find notes that might be helpful for the current task or conversation.
+Parameters:
+- context: (required) The current context to find relevant notes for
+Usage:
+<get_relevant_notes>
+<context>Your current context here</context>
+</get_relevant_notes>
+
 # Tool Use Examples
 
 ## Example 1: Requesting to execute a command
